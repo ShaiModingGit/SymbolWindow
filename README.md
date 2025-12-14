@@ -78,7 +78,7 @@ You can customize the appearance and behavior of the symbol list via VS Code set
 - **Symbol Window: Focus Search Box**: allow keybinding to show window and also make search text box in focus.
 
 ## Usage
-![alt text](https://github.com/ShaiModingGit/SymbolWindow/media/how_to.gif?raw=true)
+![alt text](https://github.com/ShaiModingGit/SymbolWindow/blob/master/media/how_to.gif?raw=true)
 ![alt text](media/SymbolWindow.png)
 1.  **Open the View**: ![alt text](media/ActivityBar.png)<br>
 Click the "Symbol Window" icon in the Activity Bar (usually on the left).
