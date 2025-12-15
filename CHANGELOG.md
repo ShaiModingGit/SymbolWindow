@@ -4,6 +4,10 @@ All notable changes to the "symbol-window" extension will be documented in this 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.6.5] - Fix symbol provider and path
+- added fix for local file scheme and context window showing now on local and on WSL
+- fix symbol provider to start in the background to reduce time of wait
+
 ## [0.6.0] - Fix dependencies that were depricated
 - updated and fix all depricated dependencies that the original author had
 

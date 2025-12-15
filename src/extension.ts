@@ -16,8 +16,12 @@ export function activate(context: vscode.ExtensionContext) {
     const dbManager = new DatabaseManager(context);
     globalDbManager = dbManager;
 
-    const controller = new SymbolController(context, lspClient, dbManager);
-    const provider = new SymbolWebviewProvider(context.extensionUri, controller);
+    const controller = new SymbolController(context, lspClient, dbManager);    
+    // Start LSP polling immediately if we have an active editor
+    // This prevents waiting for window focus to trigger the first poll
+    if (vscode.window.activeTextEditor) {
+        lspClient.startPolling();
+    }    const provider = new SymbolWebviewProvider(context.extensionUri, controller);
     const provider2 = new SymbolWebviewProvider(context.extensionUri, controller, 'symbol-window-view-2');
     const disabledProvider = new DisabledWebviewProvider(context.extensionUri);
 

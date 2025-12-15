@@ -528,7 +528,7 @@ export class SymbolController {
             } 
             else                
             {
-                rootFilePath = uriStr;
+                rootFilePath = vscode.Uri.parse(uriStr).path;
             }
             const rawPath = rootFilePath;
             

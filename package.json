@@ -2,7 +2,7 @@
   "name": "symbol-relation-window2",
   "displayName": "Symbol Window2",
   "description": "Source Insight-like symbol navigation and workspace search.",
-  "version": "0.6.0",
+  "version": "0.6.5",
   "publisher": "ShaiSarfaty",
   "license": "MIT",
   "author": {

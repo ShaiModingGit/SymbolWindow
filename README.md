@@ -15,6 +15,7 @@ A Visual Studio Code extension that provides a "Source Insight"-like symbol navi
 - **Dual screen**: split additional screen view for current file symbols as additional to project workspace
 - **Focus text box**: Added new command for keybinding to allow showing the main Symbols window and put the text box in focus
 - **Package outdate update**: fix packges for security audit and updates
+- **ContextWindow preview**: added when single click an item from list to show into context window extension (if exist)
 
 ### 1. Current Document Mode
 - **Tree View**: Displays symbols (functions, classes, variables, etc.) of the active file in a hierarchical tree.

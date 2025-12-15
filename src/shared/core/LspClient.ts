@@ -30,6 +30,17 @@ export class LspClient {
                 this.startPolling();
             }
         });
+
+        // Start polling immediately if an editor is already active
+        // This ensures we don't wait for a focus change event
+        if (vscode.window.activeTextEditor) {
+            // Delay slightly to allow extension host to fully initialize
+            setTimeout(() => {
+                if (this._status === 'standby') {
+                    this.startPolling();
+                }
+            }, 100);
+        }
     }
 
     public get status(): LspStatus {
