@@ -27,6 +27,67 @@ body {
     border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border);
 }
 
+.search-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.search-input {
+    width: 100%;
+    padding: 4px 8px 4px 26px;
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border, transparent);
+    border-radius: 2px;
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    outline: none;
+}
+
+.search-input:focus {
+    border-color: var(--vscode-focusBorder);
+}
+
+.search-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.search-input::placeholder {
+    color: var(--vscode-input-placeholderForeground);
+}
+
+.search-icon {
+    position: absolute;
+    left: 6px;
+    pointer-events: none;
+    color: var(--vscode-input-foreground);
+    opacity: 0.7;
+}
+
+.search-icon-end {
+    position: absolute;
+    right: 6px;
+    cursor: pointer;
+    pointer-events: all;
+    color: var(--vscode-input-foreground);
+    opacity: 0.7;
+    padding: 2px;
+}
+
+.search-icon-end:hover {
+    opacity: 1;
+    background-color: var(--vscode-toolbar-hoverBackground);
+    border-radius: 3px;
+}
+
+.search-icon-end.active {
+    color: var(--vscode-textLink-activeForeground);
+    opacity: 1;
+}
+
 .mode-indicator {
     font-size: 0.8em;
     text-transform: uppercase;

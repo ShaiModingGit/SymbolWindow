@@ -3,9 +3,18 @@ this is a mod version with more features than the original.
 credits to the original code by - ytlee:
 https://marketplace.visualstudio.com/items?itemName=ytlee.symbol-relation-window
 
+
 A Visual Studio Code extension that provides a "Source Insight"-like symbol navigation experience. It offers a dedicated side panel to browse symbols in the current document or search across the entire workspace with a native look and feel.
 
+
+
+
 ## Features
+### 0. Mods
+- **Sroting**: Sorting and font bold markup of found result
+- **Dual screen**: split additional screen view for current file symbols as additional to project workspace
+- **Focus text box**: Added new command for keybinding to allow showing the main Symbols window and put the text box in focus
+- **Package outdate update**: fix packges for security audit and updates
 
 ### 1. Current Document Mode
 - **Tree View**: Displays symbols (functions, classes, variables, etc.) of the active file in a hierarchical tree.
@@ -33,7 +42,7 @@ For large workspaces where standard LSP search is slow or incomplete, Symbol Win
 - **Visual Indicator**: The UI clearly labels this mode as **PROJECT WORKSPACE (DATABASE)**.
 
 ### 4. Native Experience
-- **UI**: Built with `@vscode/webview-ui-toolkit` to match VS Code's native design.
+- **UI**: Built with custom components styled to match VS Code's native design.
 - **Icons**: Uses standard VS Code Codicons.
 - **Theme Aware**: Automatically adapts to Light, Dark, and High Contrast themes.
 

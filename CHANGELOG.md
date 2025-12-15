@@ -4,6 +4,9 @@ All notable changes to the "symbol-window" extension will be documented in this 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.6.0] - Fix dependencies that were depricated
+- updated and fix all depricated dependencies that the original author had
+
 ## [0.5.5] - Moved to Shai Mod repo with new changes
 - added new second window fixed to only current document view 
 - added search to show bold search results of found characters in found srtings

@@ -22,11 +22,19 @@ export function activate(context: vscode.ExtensionContext) {
     const disabledProvider = new DisabledWebviewProvider(context.extensionUri);
 
 	context.subscriptions.push(
-		vscode.window.registerWebviewViewProvider(SymbolWebviewProvider.viewType, provider)
+		vscode.window.registerWebviewViewProvider(
+			SymbolWebviewProvider.viewType, 
+			provider,
+			{ webviewOptions: { retainContextWhenHidden: true } }
+		)
 	);
 
 	context.subscriptions.push(
-		vscode.window.registerWebviewViewProvider('symbol-window-view-2', provider2)
+		vscode.window.registerWebviewViewProvider(
+			'symbol-window-view-2', 
+			provider2,
+			{ webviewOptions: { retainContextWhenHidden: true } }
+		)
 	);
 
 	// Register second provider with controller

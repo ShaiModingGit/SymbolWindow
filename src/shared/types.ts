@@ -38,9 +38,10 @@ export type Message =
 export type WebviewMessage =
     | { command: 'search'; query: string; includePattern?: string }
     | { command: 'jump'; uri?: string; range: any }
-    | { command: 'ready' }
+    | { command: 'ready'; hasSymbols?: boolean }
     | { command: 'loadMore' }
     | { command: 'deepSearch' }
     | { command: 'cancel' }
     | { command: 'selectScope' }
-    | { command: 'clearScope' };
+    | { command: 'clearScope' }
+    | { command: 'logSelection'; symbolName: string; uri: string; line: number };

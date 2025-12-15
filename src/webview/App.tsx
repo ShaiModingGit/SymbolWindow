@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { VSCodeTextField } from '@vscode/webview-ui-toolkit/react';
 import { SymbolItem, SymbolMode, WebviewMessage, Message } from '../shared/types';
 import SymbolTree from './features/symbol/SymbolTree';
 import './style.css';
@@ -12,8 +11,9 @@ const App: React.FC = () => {
     const [mode, setMode] = useState<SymbolMode>(savedState.mode || 'current');
     const searchInputRef = useRef<any>(null);
     const [query, setQuery] = useState(savedState.query || '');
-    const [symbols, setSymbols] = useState<SymbolItem[]>([]);
-    const [totalCount, setTotalCount] = useState<number>(0);
+    const [symbols, setSymbols] = useState<SymbolItem[]>(savedState.symbols || []);
+    const [totalCount, setTotalCount] = useState<number>(savedState.totalCount || 0);
+    const [hasResults, setHasResults] = useState<boolean>(savedState.hasResults || false);
     const [selectedSymbol, setSelectedSymbol] = useState<SymbolItem | null>(null);
     const [isSearching, setIsSearching] = useState(false);
     const [backendStatus, setBackendStatus] = useState<'ready' | 'loading' | 'timeout'>(
@@ -30,15 +30,30 @@ const App: React.FC = () => {
     const modeRef = useRef(mode);
     const queryRef = useRef(query);
     const includePatternRef = useRef(includePattern);
+    const symbolsRef = useRef(symbols);
+    const lastSearchQueryRef = useRef<string>(savedState.lastSearchQuery || savedState.query || '');
+    const lastSearchPatternRef = useRef<string>(savedState.lastSearchPattern || savedState.includePattern || '');
 
     useEffect(() => { modeRef.current = mode; }, [mode]);
     useEffect(() => { queryRef.current = query; }, [query]);
     useEffect(() => { includePatternRef.current = includePattern; }, [includePattern]);
+    useEffect(() => { symbolsRef.current = symbols; }, [symbols]);
 
     // Save state
     useEffect(() => {
-        vscode.setState({ mode, query, showDetails, includePattern, isDatabaseMode });
-    }, [mode, query, showDetails, includePattern, isDatabaseMode]);
+        vscode.setState({ 
+            mode, 
+            query, 
+            showDetails, 
+            includePattern, 
+            isDatabaseMode,
+            symbols,
+            totalCount,
+            hasResults,
+            lastSearchQuery: lastSearchQueryRef.current,
+            lastSearchPattern: lastSearchPatternRef.current
+        });
+    }, [mode, query, showDetails, includePattern, isDatabaseMode, symbols, totalCount, hasResults]);
 
     // Handle messages from extension
     useEffect(() => {
@@ -50,6 +65,7 @@ const App: React.FC = () => {
                     if (message.totalCount !== undefined) {
                         setTotalCount(message.totalCount);
                     }
+                    setHasResults(message.symbols.length > 0);
                     setIsSearching(false);
                     break;
                 case 'searchStart':
@@ -61,6 +77,9 @@ const App: React.FC = () => {
                         setMode(message.mode);
                         setQuery(''); // Clear query on mode toggle
                         setSymbols([]);
+                        setHasResults(false);
+                        lastSearchQueryRef.current = '';
+                        lastSearchPatternRef.current = '';
                         // Don't auto-set status here, rely on backend 'status' message
                     }
                     break;
@@ -77,8 +96,19 @@ const App: React.FC = () => {
                     break;
                 case 'refresh':
                     if (modeRef.current === 'project') {
-                        // Re-trigger search with current query
-                        vscode.postMessage({ command: 'search', query: queryRef.current, includePattern: includePatternRef.current });
+                        // Only re-trigger search if:
+                        // 1. Query or pattern has changed since last search, OR
+                        // 2. No symbols exist yet (initial load)
+                        const queryChanged = queryRef.current !== lastSearchQueryRef.current;
+                        const patternChanged = includePatternRef.current !== lastSearchPatternRef.current;
+                        const hasNoResults = symbolsRef.current.length === 0;
+                        
+                        if (queryChanged || patternChanged || hasNoResults) {
+                            lastSearchQueryRef.current = queryRef.current;
+                            lastSearchPatternRef.current = includePatternRef.current;
+                            vscode.postMessage({ command: 'search', query: queryRef.current, includePattern: includePatternRef.current });
+                        }
+                        // Otherwise, keep existing results "sticky" - don't re-trigger search
                     }
                     break;
                 case 'highlight':
@@ -139,7 +169,13 @@ const App: React.FC = () => {
         window.addEventListener('message', handleMessage);
         
         // Notify extension that we are ready
-        vscode.postMessage({ command: 'ready' });
+        // Delay slightly to ensure state is fully initialized
+        setTimeout(() => {
+            // Only indicate hasSymbols if in project mode with query and we had results
+            // This ensures sticky behavior only when we have actual search results to preserve
+            const hasValidSymbols = mode === 'project' && query.length > 0 && hasResults;
+            vscode.postMessage({ command: 'ready', hasSymbols: hasValidSymbols });
+        }, 50);
 
         return () => window.removeEventListener('message', handleMessage);
     }, []);
@@ -153,6 +189,7 @@ const App: React.FC = () => {
             // Debounce is handled in backend or here? 
             // Spec says "Triggered only when the user types".
             // Let's send every keystroke and let backend debounce.
+            lastSearchQueryRef.current = newQuery;
             vscode.postMessage({ command: 'search', query: newQuery, includePattern: includePatternRef.current });
         }
     };
@@ -162,6 +199,7 @@ const App: React.FC = () => {
         setIncludePattern(newPattern);
         
         if (mode === 'project' && query) {
+            lastSearchPatternRef.current = newPattern;
             vscode.postMessage({ command: 'search', query: query, includePattern: newPattern });
         }
     };
@@ -188,6 +226,21 @@ const App: React.FC = () => {
     // Handle selection
     const handleSelect = (symbol: SymbolItem) => {
         setSelectedSymbol(symbol);
+        
+        // Debug: Log to webview console
+        console.log('[Webview] handleSelect called', { mode, symbolName: symbol.name, hasUri: !!symbol.uri, hasSelectionRange: !!symbol.selectionRange });
+        
+        // If in project mode (first window), log to debug console
+        if (mode === 'project' && symbol.uri && symbol.selectionRange) {
+            const lineNumber = symbol.selectionRange[0].line;
+            console.log('[Webview] Sending logSelection message', { symbolName: symbol.name, uri: symbol.uri, line: lineNumber });
+            vscode.postMessage({ 
+                command: 'logSelection', 
+                symbolName: symbol.name,
+                uri: symbol.uri, 
+                line: lineNumber
+            });
+        }
     };
 
     // Handle keyboard navigation
@@ -390,24 +443,25 @@ const App: React.FC = () => {
                         Symbol provider not ready. Open a file to retry.
                     </div>
                 )}
-                <VSCodeTextField 
-                    ref={searchInputRef}
-                    placeholder={mode === 'current' ? "Filter symbols..." : "Search workspace..."}
-                    value={query}
-                    onInput={handleSearch}
-                    style={{ width: '100%' }}
-                    disabled={backendStatus === 'loading' || backendStatus === 'timeout'}
-                >
-                    <span slot="start" className="codicon codicon-search"></span>
+                <div className="search-input-wrapper">
+                    <span className="codicon codicon-search search-icon"></span>
+                    <input 
+                        ref={searchInputRef}
+                        type="text"
+                        className="search-input"
+                        placeholder={mode === 'current' ? "Filter symbols..." : "Search workspace..."}
+                        value={query}
+                        onInput={handleSearch}
+                        disabled={backendStatus === 'loading' || backendStatus === 'timeout'}
+                    />
                     {mode === 'project' && enableDeepSearch && !isDatabaseMode && (
                         <span 
-                            slot="end" 
-                            className={`codicon codicon-kebab-vertical ${showDetails ? 'active' : ''}`}
+                            className={`codicon codicon-kebab-vertical search-icon-end ${showDetails ? 'active' : ''}`}
                             onClick={() => setShowDetails(!showDetails)}
                             title="Toggle Search Details(DeepSearch)"
                         ></span>
                     )}
-                </VSCodeTextField>
+                </div>
                 
                 {mode === 'project' && enableDeepSearch && !isDatabaseMode && showDetails && (
                     <div className="search-details">
@@ -431,15 +485,17 @@ const App: React.FC = () => {
                         </div>
                         <div className="include-pattern-container">
                             <span className="label">files to include</span>
-                            <VSCodeTextField 
-                                placeholder="e.g. *.ts, src/**/include"
-                                value={includePattern}
-                                onInput={handleIncludePatternChange}
-                                onKeyDown={handleIncludePatternKeyDown}
-                                className="include-pattern-input"
-                            >
-                                <span slot="start" className="codicon codicon-files"></span>
-                            </VSCodeTextField>
+                            <div className="search-input-wrapper">
+                                <span className="codicon codicon-files search-icon"></span>
+                                <input 
+                                    type="text"
+                                    className="search-input include-pattern-input"
+                                    placeholder="e.g. *.ts, src/**/include"
+                                    value={includePattern}
+                                    onInput={handleIncludePatternChange}
+                                    onKeyDown={handleIncludePatternKeyDown}
+                                />
+                            </div>
                         </div>
                     </div>
                 )}

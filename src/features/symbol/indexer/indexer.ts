@@ -306,7 +306,12 @@ export class SymbolIndexer {
         // 1. Get all files in workspace using Ripgrep
         const workspaceFiles = await this.findAllFiles();
         const workspaceFileMap = new Map(workspaceFiles.map(f => [f.fsPath, f]));
-
+        let myUri = workspaceFiles[0];
+        console.log("*****************" + myUri.toString() + "******************"  );
+        console.log("*****************" + myUri.toString() + "******************"  );
+        console.log("*****************" + myUri.toString() + "******************"  );
+        console.log("*****************" + myUri.toString() + "******************"  );
+        console.log("*****************" + myUri.toString() + "******************"  );
         // 2. Get all files in DB
         const dbFiles = this.db.getFiles();
 

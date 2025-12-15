@@ -42,6 +42,10 @@ export class SymbolWebviewProvider implements vscode.WebviewViewProvider {
 
         webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
+        // Check if webview has persisted state from VS Code
+        // This is more reliable than waiting for the webview to send its state
+        const hasPersistedState = context.state && (context.state as any).hasResults && (context.state as any).query;
+        
         // Listen for visibility changes
         webviewView.onDidChangeVisibility(() => {
             if (webviewView.visible && this.pendingFocusSearch) {
@@ -56,7 +60,15 @@ export class SymbolWebviewProvider implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(async (data: WebviewMessage) => {
             switch (data.command) {
                 case 'ready':
-                    this.controller.refresh();
+                    // Check both the webview's hasSymbols flag AND the persisted state from VS Code
+                    // Use the persisted state as fallback if webview hasn't fully initialized yet
+                    const shouldSkipRefresh = data.hasSymbols || hasPersistedState;
+                    
+                    // Only refresh if we don't have persisted symbols (sticky behavior)
+                    // This prevents any messages that could cause re-render and flicker
+                    if (!shouldSkipRefresh) {
+                        this.controller.refresh(this, data.hasSymbols);
+                    }
                     // Execute pending focus if queued
                     if (this.pendingFocusSearch) {
                         this.pendingFocusSearch = false;
@@ -86,6 +98,10 @@ export class SymbolWebviewProvider implements vscode.WebviewViewProvider {
                     break;
                 case 'cancel':
                     this.controller.cancelSearch();
+                    break;
+                case 'logSelection':
+                    console.log('[SymbolWebviewProvider] Received logSelection message', data);
+                    this.controller.logSelection(data.symbolName, data.uri, data.line);
                     break;
             }
         });

@@ -156,7 +156,7 @@ export class SymbolController {
         }
     }
 
-    public async refresh() {
+    public async refresh(callingProvider?: SymbolWebviewProvider, hasSymbols?: boolean) {
         // Clear cache on explicit refresh
         this.searchCache.clear();
 
@@ -510,6 +510,53 @@ export class SymbolController {
                 editor.revealRange(new vscode.Range(range[0].line, range[0].character, range[1].line, range[1].character));
                 editor.selection = new vscode.Selection(range[0].line, range[0].character, range[1].line, range[1].character);
             }
+        }
+    }
+
+    public async logSelection(symbolName: string, uriStr: string, line: number) {
+        try 
+        {
+            const range = {
+                    start: { line: line, character: 1 },
+                    end: { line: line, character: 1 }
+            };
+            let rootFilePath = "";
+            if (vscode.env.remoteName === 'wsl') 
+            {
+                let distro = process.env.WSL_DISTRO_NAME;
+                rootFilePath = "vscode-remote://wsl+" + distro + vscode.Uri.parse(uriStr).path;  
+            } 
+            else                
+            {
+                rootFilePath = uriStr;
+            }
+            const rawPath = rootFilePath;
+            
+            if (!rawPath || rawPath.length === 0) 
+            {
+                //probably this is the root elemet so no action needed
+                return;
+            }
+            const lineNumber = line;
+
+            // Detect if we're in a WSL environment
+            let _fileUri;
+            if (rawPath.startsWith("vscode-remote:"))
+            {
+                _fileUri = rawPath;
+            }
+            else
+            {
+                // Windows path or UNC path
+                _fileUri = vscode.Uri.file(rawPath);
+            }            
+
+            await vscode.commands.executeCommand('vscode-context-window.navigateUri', _fileUri.toString(), range);
+
+        } 
+        catch (error) {
+            // Silently fail - command might not be available
+            //console.debug('[SymbolWindow] Failed to execute vscode-context-window.navigateUri:', error);
         }
     }
 

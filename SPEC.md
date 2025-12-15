@@ -321,7 +321,7 @@ The database schema is normalized to reduce storage size and improve query perfo
 #### 5.3.1 Components
 1.  **SymbolWebviewProvider:** Implements `vscode.WebviewViewProvider`. Hosts the React app.
 2.  **React App (Frontend):**
-    - **Library:** Use `@vscode/webview-ui-toolkit` for native VS Code UI components.
+    - **Library:** Use custom React components styled with VSCode CSS variables for native VS Code UI appearance.
     - `App`: Main container, handles state (Mode, SearchQuery, TreeData).
     - `SearchBar`: Input component.
     - `SymbolTree`: Renders the tree/list. Handles expansion and selection.
